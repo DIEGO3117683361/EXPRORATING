@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escribir y Leer NFC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        textarea {
+            width: 80%;
+            height: 100px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Escribir y Leer NFC</h1>
+
+    <h2>Escribir en NFC</h2>
+    <textarea id="nfcText" placeholder="Escribe aquí el texto para la etiqueta NFC..."></textarea><br>
+    <button id="writeNfcButton">Escribir en NFC</button>
+    <p id="writeNfcStatus"></p>
+
+    <h2>Leer NFC</h2>
+    <p id="readNfcOutput">Acerca una etiqueta NFC con datos para leer...</p>
+
+    <script>
+        // Funcionalidad para escribir en NFC
+        document.getElementById('writeNfcButton').addEventListener('click', async () => {
+            const text = document.getElementById('nfcText').value;
+            if (!text) {
+                document.getElementById('writeNfcStatus').textContent = 'Por favor, escribe algo en el campo de texto.';
+                return;
+            }
+            try {
+                const nfcWriter = new NDEFWriter();
+                await nfcWriter.write({
+                    records: [{ recordType: "text", data: text }]
+                });
+                document.getElementById('writeNfcStatus').textContent = 'Texto escrito en la etiqueta NFC.';
+            } catch (error) {
+                document.getElementById('writeNfcStatus').textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Funcionalidad para leer NFC
+        if ('NDEFReader' in window) {
+            const nfcReader = new NDEFReader();
+            nfcReader.scan().then(() => {
+                nfcReader.onreading = (event) => {
+                    const message = event.message;
+                    for (const record of message.records) {
+                        if (record.recordType === "text") {
+                            document.getElementById('readNfcOutput').textContent = `Texto leído: ${record.data}`;
+                        }
+                    }
+                };
+            }).catch(error => {
+                document.getElementById('readNfcOutput').textContent = `Error: ${error.message}`;
+            });
+        } else {
+            document.getElementById('readNfcOutput').textContent = 'NFC no soportado en este navegador.';
+        }
+    </script>
+</body>
+</html>
